@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# check_nrpe -H <IP> -t <timeout> -c <command> -a <arglist space seperated>
+# command_line    $USER1$/eventhanderls/event_nrpe -H $ARG1$ -C $ARG2$ -S $ARG3$ -T $ARG4$ -N $ARG5$ -D $ARG6$ -d $ARG7$ -a "$ARG8$"
+# event_nrpe!$HOSTADDRESS$!<command>!CRITICAL!SOFT!1,3,4!$SERVICESTATE$$STATETYPE$$SERVICEATTEMPT$!$SERVICEDOWNTIME$!<args>
+
+LIBEXECPATH=/data/icinga/libexec
+EVENTHLOG=/data/icinga/var/eventhandler.log
+TIMEOUT=15
+EVENTDATE="$(date)"
+
+while getopts H:C:S:T:N:D:d:a: flag; do
+  case $flag in
+    H)
+      HOSTADDRESS="$OPTARG";
+      ;;
+    C)
+      CMD="$OPTARG";
+      ;;
+    S)
+      SSTATE="$OPTARG";
+      ;;
+    T)
+      STYPE="$OPTARG";
+      ;;
+    N)
+      STRY="$OPTARG";
+      ;;
+    D)
+      EVENT="$OPTARG";
+      ;;
+    d)
+      DOWNTIME=$OPTARG;
+      ;;
+    a)
+      ARGS="$OPTARG";
+      ;;
+    ?)
+      echo "Missing flags.";
+      exit 1;
+      ;;
+  esac
+done
+
+IMSG="$EVENTDATE - $HOSTADDRESS - $EVENT - command: $CMD "
+
+if [ $DOWNTIME -gt 0 ]; then
+	echo "$IMSG is in a scheduled downtime... exit 0" >> $EVENTHLOG
+	exit 0
+fi
+
+IFS=','
+TRYARR=$STRY
+
+for x in $TRYARR
+do
+    if [ "$SSTATE$STYPE$x" = "$EVENT" ]; then
+	if [ $ARGS ]; then
+		echo "$IMSG running command with arguments - $ARGS". >> $EVENTHLOG
+    		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD -a "$ARGS"
+		RT=$?
+		echo "$IMSG return code was $RT" >> $EVENTHLOG
+		exit $RT
+	else
+		echo "$IMSG running command." >> $EVENTHLOG
+		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD
+		RT=$?
+                echo "$IMSG return code was $RT" >> $EVENTHLOG
+                exit $RT
+	fi
+    fi
+done
+exit 0
+#EOF
