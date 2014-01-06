@@ -8,6 +8,7 @@ LIBEXECPATH=/data/icinga/libexec
 EVENTHLOG=/data/icinga/var/eventhandler.log
 TIMEOUT=15
 EVENTDATE="$(date)"
+MAILADR="unix@everyware.ch"
 
 while getopts H:C:S:T:N:D:d:a: flag; do
   case $flag in
@@ -59,13 +60,15 @@ do
 		echo "$IMSG running command with arguments - $ARGS". >> $EVENTHLOG
     		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD -a "$ARGS"
 		RT=$?
-		echo "$IMSG return code was $RT" >> $EVENTHLOG
+		echo "[ICINGA] $IMSG return code was $RT" >> $EVENTHLOG
+		echo "Icinga Eventhandler\n$IMSG running command with arguments - $ARGS\n$IMSG return code was $RT" | mailx -s "$IMSG - $RT" $MAILADR
 		exit $RT
 	else
 		echo "$IMSG running command." >> $EVENTHLOG
 		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD
 		RT=$?
-                echo "$IMSG return code was $RT" >> $EVENTHLOG
+                echo "[ICINGA] $IMSG return code was $RT" >> $EVENTHLOG
+		echo "Icinga Eventhandler\n$IMSG running command\n$IMSG return code was $RT" | mailx -s "$IMSG - $RT" $MAILADR
                 exit $RT
 	fi
     fi
