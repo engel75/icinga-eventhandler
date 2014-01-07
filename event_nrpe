@@ -61,14 +61,22 @@ do
     		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD -a "$ARGS"
 		RT=$?
 		echo "$IMSG return code was $RT" >> $EVENTHLOG
-		echo "Icinga Eventhandler\n$IMSG running command with arguments - $ARGS\n$IMSG return code was $RT" | mailx -s "[ICINGA] $IMSG - $RT" $MAILADR
+		 mailx -s "[ICINGA] $IMSG - $RT" $MAILADR <<EOF
+Icinga Eventhandler
+$IMSG - with arguments - $ARGS
+$IMSG return code was $RT
+EOF
 		exit $RT
 	else
 		echo "$IMSG running command." >> $EVENTHLOG
 		$LIBEXECPATH/check_nrpe -H $HOSTADDRESS -t $TIMEOUT -c $CMD
 		RT=$?
                 echo "$IMSG return code was $RT" >> $EVENTHLOG
-		echo "Icinga Eventhandler\n$IMSG running command\n$IMSG return code was $RT" | mailx -s "[ICINGA] $IMSG - $RT" $MAILADR
+		mailx -s "[ICINGA] $IMSG - $RT" $MAILADR <<EOF
+Icinga Eventhandler
+$IMSG 
+$IMSG return code was $RT
+EOF
                 exit $RT
 	fi
     fi
