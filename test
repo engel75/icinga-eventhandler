@@ -1,0 +1,13 @@
+IFS=','
+TRYARR=1,3,5,9
+
+AFFE=A
+TESTT=B
+EVENT=AB3
+
+for x in $TRYARR
+do
+if [ "$AFFE$TESTT$x" = "$EVENT" ]; then
+ echo "$EVENT" 
+fi
+done
